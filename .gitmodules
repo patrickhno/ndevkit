@@ -1,0 +1,3 @@
+[submodule "NUAE"]
+	path = NUAE
+	url = git://github.com/patrickhno/NUAE.git
