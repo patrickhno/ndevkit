@@ -6,7 +6,8 @@ clean:
 	cd tools/gcc; make clean
 	cd kernel; make clean
 
-kernel/rom.bin: tools/gcc/usr/bin/m68k-elf-gcc
+kernel/rom.bin: tools/gcc/usr/bin/m68k-elf-gcc FORCE
+	cd kernel; make
 
 run: all
 	./NUAE/src/PUAE.app/Contents/MacOS/uae -s kickstart_rom_file=kernel/rom.bin
@@ -16,3 +17,6 @@ NUAE/src/PUAE.app/Contents/MacOS/uae:
 
 tools/gcc/usr/bin/m68k-elf-gcc:
 	cd tools/gcc; make
+
+FORCE:
+	true
