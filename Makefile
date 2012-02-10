@@ -6,7 +6,7 @@ clean:
 	cd tools/gcc; make clean
 	cd kernel; make clean
 
-kernel/rom.bin: tools/gcc/usr/bin/m68k-elf-gcc FORCE
+kernel/rom.bin: tools/vbcc/usr/bin/vc FORCE
 	cd kernel; make
 
 run: all
@@ -15,8 +15,8 @@ run: all
 NUAE/src/PUAE.app/Contents/MacOS/uae:
 	cd NUAE; sh build_macos_cocoa.sh
 
-tools/gcc/usr/bin/m68k-elf-gcc:
-	cd tools/gcc; make
+tools/vbcc/usr/bin/vc:
+	cd tools/vbcc; make
 
 FORCE:
 	true
