@@ -1,0 +1,6 @@
+
+# ndevkit
+
+Usage:
+
+    make run
