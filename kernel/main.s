@@ -2,6 +2,8 @@
 VERSION = 46
 REVISION= 10
 
+        GLOBAL  rom_start
+
 rom_start:
         dc.w	$1111
 .start:
@@ -47,8 +49,27 @@ boot:
         move.w  #$7fff,$9a(a0)
         move.w  #$7fff,$9c(a0)
         move.w  #$7fff,$96(a0)
+
+        ; set up exec base
+        lea.l   $40000,a6      ; where do we really want exec base?
+        move.l  a6,$4.w
+        move.l  a6,d0
+        not.l   d0
+        move.l  d0,$26(a6)
+
+        ; set up stack
+        lea.l   $50000,sp
+
+        jsr     bootstrap_exec_lib(pc)
+
+        ; call the OldOpenLibrary stub, should give a really green screen
+        move.l  $4.w,a6
+        jsr     -408(a6)
+
+        lea.l   $dff000,a0
         moveq   #1,d0
 .loop:
         move.w  d0,$180(a0)
         addq.w  #1,d0
+        and.w   #$f,d0
         bra.b   .loop
