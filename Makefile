@@ -19,6 +19,11 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+VBCC=$(PWD)/tools/vbcc/usr
+PATH := $(VBCC)/bin:$(PATH)
+export VBCC
+export PATH
+
 all: NUAE/src/PUAE.app/Contents/MacOS/uae kernel/rom.bin
 
 clean:

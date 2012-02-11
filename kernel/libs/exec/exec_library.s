@@ -20,6 +20,7 @@
 ; WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
         INCLUDE ../../../include/hardware/custom.i
+        INCLUDE exec.i
 
         GLOBAL  bootstrap_exec_lib
 
@@ -29,8 +30,99 @@ bootstrap_exec_lib:
         move.l  a6,$4.w
         move.l  a6,d0
         not.l   d0
-        move.l  d0,$26(a6)
+        move.l  d0,(ChkBase,a6)
 
+        bsr.b   set_jump_vectors
+        bsr.b   initialize_lists
+        bsr.b   detach
+        rts
+
+; fire up multitasking, making ourselves the currently running task
+detach:
+        ; allocate a entry for the task descriptor
+        lea     .list,a0
+        bsr.b   AllocEntry
+        move.l  d0,a0
+
+        move.l  (LN_SIZE+2,a0),a1       ; allocated memory
+        lea     (1024,a1),a2            ; StackControl
+        move.l  a2,usp
+
+        move.l  a1,(TC_SPLOWER,a2)
+        move.l  a2,(TC_SPUPPER,a2)
+        move.l  a2,(TC_SPREG,a2)
+        clr.b   (LN_PRI,a2)
+        move.b  #NT_TASK,(LN_TYPE,a2)
+        move.l  #.task_name,(LN_NAME,a2)
+
+        ; clear tasks memory list
+        lea.l   (TC_MEMENTRY,a2),a0
+        move.l  a0,(LH_HEAD,a0)
+        clr.l   (LH_TAIL,a0)
+        move.l  a0,(LH_TAILPRED,a0)
+
+        ; Add the memory list from AllocEntry
+        move.l  d0,a1
+        bsr.b   AddHead
+
+        ; Add the task
+        move.l  a2,(ThisTask,a6)
+        sub.l   a2,a2
+        move.l  a2,a3
+        bsr.b   AddTask
+
+        move.l  (ThisTask,a6),a1
+        move.b  #TS_RUN,(TC_FLAGS,a1)
+
+        ; Unlink it from the TaskReady queue
+        bsr.b   Remove
+
+        ; and fire up multitasking :-)
+        and.w   #0,sr
+        bsr.b   Permit
+        rts
+
+.task_name:
+        dc.b    "exec.library",0
+        even
+
+.list:  blk.b   0,LH_SIZE
+        dc.w    1
+        dc.l    MEMF_PUBLIC | MEMF_CLEAR
+        dc.l    1024 + TC_SIZE
+
+
+; Initializes all ListNode structures in ExecBase
+initialize_lists:
+        lea.l   .table(pc),a0
+.loop   move.w  (a0)+,d0
+        beq.b   .end
+        lea.l   (a6,d0.w),a1
+        move.l  a1,(LH_HEAD,a1)
+        clr.l   (LH_TAIL,a1)
+        move.l  a1,(LH_TAILPRED,a1)
+        move.w  (a0)+,d0
+        move.b  d0,(LH_TYPE,a1)
+        bra.b   .loop
+.end    rts
+
+.table  dc.w    MemList,       NT_MEMORY
+        dc.w    ResourceList,  NT_RESOURCE
+        dc.w    DeviceList,    NT_DEVICE
+        dc.w    LibList,       NT_LIBRARY
+        dc.w    PortList,      NT_MSGPORT
+        dc.w    TaskReady,     NT_TASK
+        dc.w    TaskWait,      NT_TASK
+        dc.w    IntrList,      NT_INTERRUPT
+        dc.w    SoftInts+$10*0,NT_SOFTINT
+        dc.w    SoftInts+$10*1,NT_SOFTINT
+        dc.w    SoftInts+$10*2,NT_SOFTINT
+        dc.w    SoftInts+$10*3,NT_SOFTINT
+        dc.w    SoftInts+$10*4,NT_SOFTINT
+        dc.w    SemaphoreList, NT_SIGNALSEM
+        dc.w    0
+
+set_jump_vectors:
         ; generate a stubbed jump vector table
         move.w  #-906,d0
         move.w  #$4ef9,d1
@@ -168,8 +260,7 @@ bootstrap_exec_lib:
         move.l  #AVL_FindNextNodeByKey,-894(a6)
         move.l  #AVL_FindFirstNode,-900(a6)
         move.l  #AVL_FindLastNode,-906(a6)
-
-        move.l  $4.w,a6
+        subq.l  #2,a6
 	rts
 
 AVL_AddNode:
@@ -196,7 +287,14 @@ AddTail:
 AddTask:
 Alert:
 AllocAbs:
+        jmp     stub
+
 AllocEntry:
+        lea     $dff000,a0
+        move.w  #$ff0,d0
+.loop:  move.w  d0,(COLOR+0,a0)
+        bra.b   .loop
+
 AllocMem:
 AllocPooled:
 AllocSignal:
