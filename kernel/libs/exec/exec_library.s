@@ -1,8 +1,37 @@
+; Copyright (c) 2012 Patrick Hanevold.
+;
+; Permission is hereby granted, free of charge, to any person obtaining
+; a copy of this software and associated documentation files (the
+; "Software"), to deal in the Software without restriction, including
+; without limitation the rights to use, copy, modify, merge, publish,
+; distribute, sublicense, and/or sell copies of the Software, and to
+; permit persons to whom the Software is furnished to do so, subject to
+; the following conditions:
+;
+; The above copyright notice and this permission notice shall be
+; included in all copies or substantial portions of the Software.
+;
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+; EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+; MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+; NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+; LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+; OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+; WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+        INCLUDE ../../../include/hardware/custom.i
 
         GLOBAL  bootstrap_exec_lib
 
 bootstrap_exec_lib:
-        move.l  $4.w,a6
+        ; set up exec base
+        lea.l   $40000,a6      ; where do we really want exec base?
+        move.l  a6,$4.w
+        move.l  a6,d0
+        not.l   d0
+        move.l  d0,$26(a6)
+
+        ; generate a stubbed jump vector table
         move.w  #-906,d0
         move.w  #$4ef9,d1
 .loop:  move.w  d1,(a6,d0)
@@ -10,8 +39,9 @@ bootstrap_exec_lib:
         addq.w  #6,d0
         cmp.w   #-72,d0
         ble.b   .loop
-        ;rts
 
+        ; we could save shave of some bytes by
+        ; migrating this to a relative index table
         addq.l  #2,a6
         move.l  #InitCode,-72(a6)
         move.l  #InitStruct,-78(a6)
@@ -227,13 +257,19 @@ ObtainSemaphoreShared:
         jmp     stub
 
 OldOpenLibrary:
-        lea     $dff000,a0
-        move.w  #$f0,d0
-.loop:  move.w  d0,$180(a0)
-        bra.b   .loop
+        moveq   #0,d0
+        jsr     -552(a6)        ; OpenLibrary
+        rts
 
 OpenDevice:
+        jmp     stub
+
 OpenLibrary:
+        lea     $dff000,a0
+        move.w  #$f0,d0
+.loop:  move.w  d0,(COLOR+0,a0)
+        bra.b   .loop
+
 OpenResource:
 Permit:
 Procure:
@@ -276,12 +312,12 @@ WaitPort:
 stub:
         lea     $dff000,a0
         moveq   #0,d0
-.loop:  move.w  d0,$180(a0)
+.loop:  move.w  d0,(COLOR+0,a0)
         add.w   #$100,d0
         bra.b   .loop
 
 bad_stub:
         lea     $dff000,a0
 	move.w	#$f00,d0
-.loop:	move.w	d0,$180(a0)
+.loop:	move.w	d0,(COLOR+0,a0)
 	bra.b	.loop

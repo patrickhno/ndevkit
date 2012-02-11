@@ -1,4 +1,3 @@
-/*
 # Copyright (c) 2012 Patrick Hanevold.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
@@ -19,15 +18,13 @@
 # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
 
-MEMORY 
-{ 
-   rom: org = 0xf80000, len = 0x10000
-} 
+CC=../../../tools/vbcc/usr/bin/vc +aos68k -m68000 -Fhunk
 
-SECTIONS {
-  .text: { *(.text) *(CODE) *(text) } >rom
-  .data: { *(.data) *(DATA) *(data) } >rom
-  .bss: { *(.bss) *(BSS) *(bss) } >rom
-}
+all: exec_library.o
+
+clean:
+	rm -f *.o
+
+%.o : %.s
+	$(CC) -c $< -o $@

@@ -1,6 +1,28 @@
+; Copyright (c) 2012 Patrick Hanevold.
+;
+; Permission is hereby granted, free of charge, to any person obtaining
+; a copy of this software and associated documentation files (the
+; "Software"), to deal in the Software without restriction, including
+; without limitation the rights to use, copy, modify, merge, publish,
+; distribute, sublicense, and/or sell copies of the Software, and to
+; permit persons to whom the Software is furnished to do so, subject to
+; the following conditions:
+;
+; The above copyright notice and this permission notice shall be
+; included in all copies or substantial portions of the Software.
+;
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+; EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+; MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+; NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+; LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+; OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+; WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 VERSION = 46
 REVISION= 10
+
+        INCLUDE ../include/hardware/custom.i
 
         GLOBAL  rom_start
 
@@ -46,16 +68,9 @@ rom_init:
         ; party time
 boot:
         lea.l   $dff000,a0
-        move.w  #$7fff,$9a(a0)
-        move.w  #$7fff,$9c(a0)
-        move.w  #$7fff,$96(a0)
-
-        ; set up exec base
-        lea.l   $40000,a6      ; where do we really want exec base?
-        move.l  a6,$4.w
-        move.l  a6,d0
-        not.l   d0
-        move.l  d0,$26(a6)
+        move.w  #$7fff,(INTENA,a0)
+        move.w  #$7fff,(INTREQ,a0)
+        move.w  #$7fff,(DMACON,a0)
 
         ; set up stack
         lea.l   $50000,sp
@@ -66,10 +81,12 @@ boot:
         move.l  $4.w,a6
         jsr     -408(a6)
 
+        ; -- never reached --
+
         lea.l   $dff000,a0
         moveq   #1,d0
 .loop:
-        move.w  d0,$180(a0)
+        move.w  d0,(COLOR+0,a0)
         addq.w  #1,d0
         and.w   #$f,d0
         bra.b   .loop
