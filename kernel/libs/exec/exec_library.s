@@ -40,7 +40,7 @@ bootstrap_exec_lib:
         cmp.w   #-72,d0
         ble.b   .loop
 
-        ; we could save shave of some bytes by
+        ; we could shave of some bytes by
         ; migrating this to a relative index table
         addq.l  #2,a6
         move.l  #InitCode,-72(a6)
