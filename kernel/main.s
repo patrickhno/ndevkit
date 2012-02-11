@@ -40,8 +40,8 @@ rom_start:
         dc.w	REVISION
         dc.w	$ffff
         dc.w	$ffff
-	dc.b	"Amiga ROM Operating System and Libraries"
-        dc.b	"Copyright @ 2012 Patrick Hanevold"
+	dc.b	"NatAmi ROM Operating System and Libraries\n"
+        dc.b	"Copyright (c) 2012 Patrick Hanevold\n"
 
         align 4
 rom_magic_reset:
