@@ -168,6 +168,8 @@ bootstrap_exec_lib:
         move.l  #AVL_FindNextNodeByKey,-894(a6)
         move.l  #AVL_FindFirstNode,-900(a6)
         move.l  #AVL_FindLastNode,-906(a6)
+
+        move.l  $4.w,a6
 	rts
 
 AVL_AddNode:

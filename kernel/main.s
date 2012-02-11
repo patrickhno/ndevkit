@@ -78,7 +78,6 @@ boot:
         jsr     bootstrap_exec_lib(pc)
 
         ; call the OldOpenLibrary stub, should give a really green screen
-        move.l  $4.w,a6
         jsr     -408(a6)
 
         ; -- never reached --
